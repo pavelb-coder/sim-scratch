@@ -5,6 +5,10 @@
 
 Порт по умолчанию: **8083**.
 
+**Онлайн-запуск из GitHub:** <https://pavelb-coder.github.io/sim-scratch/>
+
+[![Открыть онлайн](https://img.shields.io/badge/открыть-онлайн%20редактор-4c97ff)](https://pavelb-coder.github.io/sim-scratch/)
+
 ## Возможности
 
 - блоки, спрайты, сцена, костюмы, звуки;
