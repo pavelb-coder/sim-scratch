@@ -9,6 +9,9 @@
 
 [![Открыть онлайн](https://img.shields.io/badge/открыть-онлайн%20редактор-4c97ff)](https://pavelb-coder.github.io/sim-scratch/)
 [![Deploy GitHub Pages](https://github.com/pavelb-coder/sim-scratch/actions/workflows/pages.yml/badge.svg)](https://github.com/pavelb-coder/sim-scratch/actions/workflows/pages.yml)
+[![Sync Moodle plugin branch](https://github.com/pavelb-coder/sim-scratch/actions/workflows/sync-moodle.yml/badge.svg)](https://github.com/pavelb-coder/sim-scratch/actions/workflows/sync-moodle.yml)
+
+Плагин Moodle — в ветке [`moodle-plugin`](https://github.com/pavelb-coder/sim-scratch/tree/moodle-plugin); она обновляется автоматически при каждом обновлении `main`.
 
 ## Возможности
 
