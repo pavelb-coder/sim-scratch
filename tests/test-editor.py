@@ -2,7 +2,7 @@ import json, time
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 OUT=Path('/home/user/scratch-only/test-results'); OUT.mkdir(exist_ok=True)
-URL='http://127.0.0.1:5173/'
+URL='http://127.0.0.1:8083/'
 res={}
 with sync_playwright() as p:
     b=p.chromium.launch(headless=True,args=['--no-sandbox','--disable-dev-shm-usage'])
