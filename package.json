@@ -1,0 +1,14 @@
+{
+  "name": "scratch-only-code",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scratch-only block coding editor: local .sb3 open/save, browser autosave, no Roblox/Arduino modes.",
+  "scripts": {
+    "start": "node server.js",
+    "compress": "node scripts/compress.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "AGPL-3.0-only"
+}
