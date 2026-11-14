@@ -182,7 +182,10 @@ function scratch_update_grades($scratch, $userid = 0, $nullifnone = true) {
     $submissions = $DB->get_records('scratch_submissions', $conditions);
     $grades = [];
     foreach ($submissions as $submission) {
-        if ($submission->grade === null) {
+        if ($submission->grade === null && !$userid) {
+            // When syncing everyone, skip never-graded submissions. When syncing a
+            // single user, a null grade is pushed so a cleared grade is removed
+            // from the gradebook too.
             continue;
         }
         $grade = new stdClass();
