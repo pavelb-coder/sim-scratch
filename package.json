@@ -9,6 +9,7 @@
     "dev": "node scripts/dev.js",
     "sync": "node scripts/sync.js once",
     "sync:watch": "node scripts/sync.js watch",
+    "sync:moodle": "node scripts/sync-moodle-branch.js",
     "compress": "node scripts/compress.js",
     "build:pages": "node scripts/build-pages.js"
   },

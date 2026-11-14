@@ -25,6 +25,9 @@ const remote = cfg.remote || ('https://github.com/' + cfg.repo + '.git');
 const debounceMs = Number(cfg.debounceMs || 4000);
 const pullIntervalMs = Number(cfg.pullIntervalMs || 60000);
 const commitPrefix = cfg.commitPrefix || 'auto-sync';
+// Keep the Moodle plugin branch in step with main after every successful push.
+const syncMoodle = cfg.syncMoodleBranch !== false;
+const moodleBranch = cfg.moodleBranch || 'moodle-plugin';
 const logFile = cfg.logFile ? path.join(ROOT, cfg.logFile) : null;
 if (logFile) fs.mkdirSync(path.dirname(logFile), { recursive: true });
 
@@ -66,6 +69,34 @@ function git(args, opts) {
   });
 }
 
+function runNode(args) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, args, { cwd: ROOT, env: gitEnv(), stdio: ['ignore', 'pipe', 'pipe'] });
+    let out = '', err = '';
+    child.stdout.on('data', d => { out += d; });
+    child.stderr.on('data', d => { err += d; });
+    child.on('error', e => resolve({ code: 1, out: '', err: String(e) }));
+    child.on('close', code => resolve({ code, out: out.trim(), err: err.trim() }));
+  });
+}
+
+// Mirror main into the Moodle plugin branch. Never fails the main sync.
+async function syncMoodleBranch() {
+  if (!syncMoodle) return;
+  const script = path.join(ROOT, 'scripts', 'sync-moodle-branch.js');
+  if (!fs.existsSync(script)) return;
+  try {
+    const r = await runNode([script, '--source', branch, '--target', moodleBranch]);
+    const lines = (r.out || '').split('\n').filter(l => l.startsWith('[sync-moodle]'));
+    for (const l of lines) log(l);
+    if (r.code !== 0) {
+      log('WARNING moodle branch sync failed: ' + (r.err || r.out || 'exit ' + r.code).split('\n').slice(-6).join(' | '));
+    }
+  } catch (e) {
+    log('WARNING moodle branch sync failed: ' + e.message);
+  }
+}
+
 async function ensureRemote() {
   const r = await git(['remote', 'get-url', remoteName], { allowFail: true });
   if (r.code !== 0) await git(['remote', 'add', remoteName, remote]);
@@ -89,6 +120,7 @@ async function syncOnce(reason) {
   await git(['fetch', remoteName, branch]);
   await git(['add', '-A']);
   const changed = await hasStagedChanges();
+  let pushedMain = false;
   if (changed) {
     const stamp = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
     const msg = commitPrefix + ': ' + stamp + ' (' + (reason || 'manual') + ')';
@@ -111,19 +143,23 @@ async function syncOnce(reason) {
       try {
         await git(['push', remoteName, 'HEAD:' + branch]);
         log('pushed ' + ahead + ' commit(s) to ' + cfg.repo + '#' + branch);
+        pushedMain = true;
       } catch (e) {
         // Retry once after a fresh fetch/rebase in case the remote moved.
         await git(['fetch', remoteName, branch]);
         await git(['rebase', remoteName + '/' + branch]);
         await git(['push', remoteName, 'HEAD:' + branch]);
         log('pushed after retry to ' + cfg.repo + '#' + branch);
+        pushedMain = true;
       }
     }
   } else {
     await git(['push', '-u', remoteName, 'HEAD:' + branch]);
     log('created remote branch ' + branch);
+    pushedMain = true;
   }
   if (!changed) log('up-to-date (' + (reason || 'manual') + ')');
+  if (pushedMain) await syncMoodleBranch();
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }

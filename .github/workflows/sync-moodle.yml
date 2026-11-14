@@ -1,0 +1,64 @@
+name: Sync Moodle plugin branch
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Rebuild bundled Moodle assets even if sources did not change'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-moodle-plugin
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Merge main into moodle-plugin
+        env:
+          FORCE_BUILD: ${{ github.event.inputs.force_build }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          ARGS=""
+          if [ "${FORCE_BUILD:-false}" = "true" ]; then ARGS="--force-build"; fi
+          node scripts/sync-moodle-branch.js $ARGS
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Moodle plugin branch sync"
+            echo ""
+            echo "- Source: \`main\` @ ${GITHUB_SHA:0:7}"
+            echo "- Target: \`moodle-plugin\`"
+            echo ""
+            echo "If this job failed on a merge conflict, resolve it locally:"
+            echo ""
+            echo '```bash'
+            echo "git fetch origin"
+            echo "git checkout moodle-plugin"
+            echo "git merge origin/main"
+            echo "# fix conflicts, then:"
+            echo "git commit && git push origin moodle-plugin"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
