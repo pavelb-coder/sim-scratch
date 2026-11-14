@@ -12,3 +12,4 @@ logs/
 .env.*
 sync.local.json
 dist-pages/
+mod_scratch.zip
