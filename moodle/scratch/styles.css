@@ -1,0 +1,43 @@
+.mod-scratch-meta {
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+.mod-scratch-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.mod-scratch-grade {
+  font-weight: 700;
+  margin: 12px 0;
+}
+.mod-scratch-feedback {
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+}
+.mod-scratch-grade-form {
+  max-width: 640px;
+  margin-top: 16px;
+}
+.mod-scratch-grade-form > div {
+  margin-bottom: 12px;
+}
+.mod-scratch-grade-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.mod-scratch-grade-form input[type="number"],
+.mod-scratch-grade-form textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+}
