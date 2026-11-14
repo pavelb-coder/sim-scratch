@@ -11,3 +11,4 @@ logs/
 .env
 .env.*
 sync.local.json
+dist-pages/
