@@ -39,6 +39,36 @@
 GitHub не даст права, включите вручную: **Settings → Pages → Build and
 deployment → Source: GitHub Actions**.
 
+## Ветка Moodle-плагина
+
+Плагин для Moodle лежит в отдельной ветке **`moodle-plugin`** (каталог `moodle/scratch/`).
+Ветка `main` остаётся чистым редактором.
+
+Ветка `moodle-plugin` **автоматически обновляется при каждом обновлении `main`**:
+
+- workflow `.github/workflows/sync-moodle.yml` запускается на push в `main`;
+- он вливает `main` в `moodle-plugin` и, если менялись `public/vendor/` или
+  `scripts/build-moodle-plugin.js`, пересобирает bundled-редактор плагина;
+- при конфликте слияния workflow падает с понятным сообщением — конфликт нужно
+  разрешить вручную, автоматика ничего не перезаписывает силой.
+
+То же самое делает локальный watcher (`npm run dev`, `npm run sync`): после
+успешного push в `main` он вызывает синхронизацию ветки плагина.
+
+Ручной запуск:
+
+```bash
+npm run sync:moodle              # влить main в moodle-plugin и запушить
+npm run sync:moodle -- --dry-run # проверить без push
+npm run sync:moodle -- --force-build  # принудительно пересобрать ассеты
+```
+
+Отключить локальную автосинхронизацию ветки можно в `sync.local.json`:
+
+```json
+{ "syncMoodleBranch": false }
+```
+
 ## Требования
 
 - Node.js **18+**;
@@ -200,6 +230,8 @@ sudo systemctl enable --now sim-scratch sim-scratch-sync
 - `public/` — оболочка и Scratch GUI;
 - `public/app.js` — автосохранение и скачивание `.sb3`;
 - `scripts/sync.js` — синхронизация с GitHub;
+- `scripts/sync-moodle-branch.js` — синхронизация ветки `moodle-plugin` с `main`;
+- `scripts/build-moodle-plugin.js` — сборка ассетов редактора внутри плагина (ветка `moodle-plugin`);
 - `scripts/dev.js` — совместный запуск редактора и синхронизации;
 - `start.cmd`, `start.ps1`, `start.sh` — запуск на Windows/Ubuntu;
 - `sync.config.json` — настройки синхронизации;
