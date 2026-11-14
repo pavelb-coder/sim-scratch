@@ -2,7 +2,12 @@ node_modules/
 .asset-cache/
 test-results/
 probe/
+logs/
+*.log
 *.tgz
 *.gz
 *.map
 .DS_Store
+.env
+.env.*
+sync.local.json

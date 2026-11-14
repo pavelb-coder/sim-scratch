@@ -1,0 +1,15 @@
+[Unit]
+Description=GitHub auto-sync for sim-scratch
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=simscratch
+WorkingDirectory=/opt/sim-scratch
+ExecStart=/usr/bin/node scripts/sync.js watch
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+{
+  "repo": "pavelb-coder/sim-scratch",
+  "remoteName": "origin",
+  "remote": "https://github.com/pavelb-coder/sim-scratch.git",
+  "branch": "main",
+  "autoSync": true,
+  "port": 8083,
+  "debounceMs": 4000,
+  "pullIntervalMs": 60000,
+  "commitPrefix": "auto-sync",
+  "logFile": "logs/sync.log"
+}

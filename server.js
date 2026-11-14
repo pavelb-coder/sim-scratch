@@ -5,8 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 
-const PORT = Number(process.env.PORT || 5173);
-const HOST = '0.0.0.0';
+const PORT = Number(process.env.PORT || 8083);
+const HOST = process.env.HOST || '0.0.0.0';
 const ROOT = path.join(__dirname, 'public');
 const VENDOR = path.join(ROOT, 'vendor', 'scratch-gui');
 const CACHE = path.join(__dirname, '.asset-cache');
@@ -117,7 +117,9 @@ const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://localhost');
   let p = decodeURIComponent(u.pathname);
 
-  if (p === '/health') return send(res, 200, JSON.stringify({ ok: true, mode: 'scratch-only' }), { 'Content-Type': 'application/json' });
+  if (p === '/health') {
+    return send(res, 200, JSON.stringify({ ok: true, mode: 'scratch-only', port: PORT }), { 'Content-Type': 'application/json' });
+  }
 
   // Minimal same-origin project shim for scratch-gui. It satisfies the GUI's
   // "create project" call without any external cloud account. Projects are
@@ -181,6 +183,16 @@ const server = http.createServer((req, res) => {
   serveFile(req, res, filePath, cache);
 });
 
+server.on('error', err => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Stop the other process or set PORT to another value.`);
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
+});
+
 server.listen(PORT, HOST, () => {
   console.log(`Scratch-only editor listening on http://${HOST}:${PORT}`);
+  console.log(`Local URL: http://localhost:${PORT}`);
 });

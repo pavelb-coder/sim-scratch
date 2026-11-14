@@ -4,6 +4,12 @@ const path = require('path');
 const zlib = require('zlib');
 const ROOT = path.join(__dirname, '..', 'public');
 const exts = new Set(['.js', '.css', '.html', '.json', '.svg', '.txt']);
+const ifMissing = process.argv.includes('--if-missing');
+const marker = path.join(ROOT, 'vendor', 'scratch-gui', 'dist', 'scratch-gui.js.gz');
+if (ifMissing && fs.existsSync(marker)) {
+  console.log('gzip assets already present; skipping compression');
+  process.exit(0);
+}
 let count = 0, before = 0, after = 0;
 function walk(dir) {
   for (const name of fs.readdirSync(dir)) {

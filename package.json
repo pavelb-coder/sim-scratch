@@ -1,10 +1,14 @@
 {
   "name": "scratch-only-code",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Scratch-only block coding editor: local .sb3 open/save, browser autosave, no Roblox/Arduino modes.",
   "scripts": {
+    "prestart": "node scripts/compress.js --if-missing",
     "start": "node server.js",
+    "dev": "node scripts/dev.js",
+    "sync": "node scripts/sync.js once",
+    "sync:watch": "node scripts/sync.js watch",
     "compress": "node scripts/compress.js"
   },
   "engines": {
