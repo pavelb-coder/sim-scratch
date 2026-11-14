@@ -1,6 +1,7 @@
 /* Scratch-only editor wrapper.
  * Uses the official scratch-gui UMD build, but disables community/cloud modes.
  * Adds local autosave (IndexedDB) and a .sb3 download button.
+ * Works both with the local Node server and as a static GitHub Pages site.
  */
 (function () {
   'use strict';
@@ -14,6 +15,10 @@
   var STORE = 'projects';
   var KEY = 'current';
   var SAVE_DEBOUNCE = 1500;
+
+  var ONLINE = /[?&]online=1/.test(location.search) || /\.github\.io$/i.test(location.hostname);
+  var PAGE_BASE = new URL('./', location.href);
+  function pageUrl(rel) { return new URL(rel, PAGE_BASE).href; }
 
   var vm = null;
   var ready = false;
@@ -136,6 +141,68 @@
       .then(function () { downloadBtn.disabled = false; });
   }
 
+  // Static hosting (GitHub Pages) has no Node server. scratch-gui still tries
+  // to "create" a project and may upload assets; answer those calls locally.
+  function installStaticShims() {
+    if (!ONLINE) return;
+
+    function jsonResponse(obj) {
+      return new Response(JSON.stringify(obj), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    function isProjects(url) { return /\/projects\/?(\?|$)/.test(url); }
+    function isAssetUpload(url) { return /\/assets\/[a-f0-9]{1,64}\.[a-z0-9]{1,8}(\?|$)/i.test(url); }
+
+    var XHR = window.XMLHttpRequest.prototype;
+    var origOpen = XHR.open;
+    var origSend = XHR.send;
+    function fakeXhr(xhr, obj) {
+      var text = JSON.stringify(obj);
+      setTimeout(function () {
+        try {
+          Object.defineProperties(xhr, {
+            readyState: { configurable: true, get: function () { return 4; } },
+            status: { configurable: true, get: function () { return 200; } },
+            statusText: { configurable: true, get: function () { return 'OK'; } },
+            responseText: { configurable: true, get: function () { return text; } },
+            response: { configurable: true, get: function () { return text; } },
+            responseURL: { configurable: true, get: function () { return xhr.__sc_url || ''; } }
+          });
+          xhr.getAllResponseHeaders = function () { return 'content-type: application/json\r\n'; };
+          xhr.getResponseHeader = function (h) { return /content-type/i.test(h) ? 'application/json' : null; };
+          if (typeof xhr.onreadystatechange === 'function') xhr.onreadystatechange();
+          if (typeof xhr.onload === 'function') xhr.onload();
+          if (typeof xhr.onloadend === 'function') xhr.onloadend();
+          xhr.dispatchEvent(new Event('readystatechange'));
+          xhr.dispatchEvent(new Event('load'));
+          xhr.dispatchEvent(new Event('loadend'));
+        } catch (e) { console.warn('static xhr shim failed', e); }
+      }, 0);
+    }
+    XHR.open = function (method, url) {
+      this.__sc_method = String(method || 'GET').toUpperCase();
+      this.__sc_url = String(url || '');
+      return origOpen.apply(this, arguments);
+    };
+    XHR.send = function () {
+      var url = this.__sc_url || '';
+      var method = this.__sc_method || 'GET';
+      if ((method === 'POST' || method === 'PUT') && isProjects(url)) return fakeXhr(this, { id: 'local', 'content-name': 'local', status: 'ok' });
+      if ((method === 'POST' || method === 'PUT') && isAssetUpload(url)) return fakeXhr(this, { status: 'ok' });
+      return origSend.apply(this, arguments);
+    };
+
+    var origFetch = window.fetch;
+    window.fetch = function (input, init) {
+      var url = typeof input === 'string' ? input : (input && input.url) || '';
+      var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      if ((method === 'POST' || method === 'PUT') && isProjects(url)) return Promise.resolve(jsonResponse({ id: 'local', 'content-name': 'local', status: 'ok' }));
+      if ((method === 'POST' || method === 'PUT') && isAssetUpload(url)) return Promise.resolve(jsonResponse({ status: 'ok' }));
+      var music = url.match(/static\/extension-assets\/scratch3_music\/([a-f0-9]+\.[a-z0-9]+)(\?|$)/i);
+      if (music) return origFetch.call(window, 'https://assets.scratch.mit.edu/internalapi/asset/' + music[1] + '/get/', init);
+      return origFetch.apply(this, arguments);
+    };
+  }
+
   function boot() {
     var G = window.GUI;
     if (!G || !window.React || !window.ReactDOM) {
@@ -151,6 +218,7 @@
       setStatus('Ошибка загрузки', 'error');
       return;
     }
+    installStaticShims();
     if (setAppElement) setAppElement(appTarget);
     var Wrapped = AppStateHOC(GUIComponent);
 
@@ -169,13 +237,13 @@
       canChangeLanguage: true,
       canChangeTheme: true,
       showComingSoon: false,
-      basePath: '/vendor/scratch-gui/dist/',
-      assetHost: '/assets',
-      projectHost: '/projects',
-      onClickLogo: function () { window.location.href = '/'; },
+      basePath: pageUrl('vendor/scratch-gui/dist/'),
+      assetHost: ONLINE ? 'https://assets.scratch.mit.edu' : pageUrl('assets'),
+      projectHost: pageUrl('projects'),
+      onClickLogo: function () { window.location.href = pageUrl('./'); },
       onVmInit: function (v) {
         vm = v;
-        window.__scratchOnly = { vm: v, saveNow: saveNow, downloadSb3: downloadSb3 };
+        window.__scratchOnly = { vm: v, saveNow: saveNow, downloadSb3: downloadSb3, online: ONLINE };
         v.on('PROJECT_CHANGED', scheduleSave);
         v.on('PROJECT_LOADED', restoreOnce);
       },
