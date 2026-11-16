@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0 (2026-11-14)
+
+- The editor opens on an empty project and offers to continue the saved one
+  ("Continue my project" / "Start a new project") instead of loading it silently.
+- Settings menu no longer blinks: the language list is limited to the space actually available,
+  so the GUI no longer scrolls the whole editor page to reach the selected language.
+- The tutorial library button is hidden; scratch.mit.edu tutorials are not part of a course.
+- The debug window is translated into Russian ("Debug" -> "Отладка").
+
 ## 1.1.0 (2026-11-14)
 
 - LEGO hardware support: LEGO Education WeDo 2.0 and LEGO MINDSTORMS EV3 connect through

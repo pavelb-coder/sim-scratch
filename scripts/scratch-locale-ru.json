@@ -1,0 +1,65 @@
+{
+  "gui.menuBar.debug": "Отладка",
+
+  "gui.debugModal.title": "Отладка: как находить и исправлять ошибки",
+  "gui.debugModal.readAloud.title": "Проговори код вслух",
+  "gui.debugModal.readAloud.description1": "Читая код вслух, смотри на него глазами компьютера.",
+  "gui.debugModal.readAloud.description2": "Не пропускаешь ли ты шаги, которых в программе нет?",
+  "gui.debugModal.readAloud.description3": "Понятны ли твои инструкции?",
+  "gui.debugModal.readAloud.description4": "Если что-то нужно сбрасывать при каждом запуске программы, есть ли для этого инструкции?",
+
+  "gui.debugModal.breakItDown.title": "Разбей на части",
+  "gui.debugModal.breakItDown.description1": "Раздели блоки на небольшие группы (последовательности) и нажимай на них, чтобы увидеть, что делает каждая.",
+  "gui.debugModal.breakItDown.description2": "Когда маленькие последовательности работают как нужно, собери их обратно в основную программу.",
+  "gui.debugModal.breakItDown.description3": "Этот приём называется декомпозицией.",
+
+  "gui.debugModal.slowItDown.title": "Замедли выполнение",
+  "gui.debugModal.slowItDown.description1": "Компьютер выполняет программу так быстро, что за ней трудно уследить глазами.",
+  "gui.debugModal.slowItDown.description2": "Добавь временные блоки «ждать» или «ждать до», чтобы замедлить последовательность. Так у тебя будет время понять, сработала ли какая-то часть.",
+  "gui.debugModal.slowItDown.description3": "Убери эти блоки «ждать», когда код заработает.",
+
+  "gui.debugModal.addSoundCheckpoints.title": "Добавь звуковые отметки",
+  "gui.debugModal.addSoundCheckpoints.description1": "Как и при замедлении, можно добавлять разные звуки блоком «играть до конца» в ключевых местах, чтобы проверять последовательность.",
+  "gui.debugModal.addSoundCheckpoints.description2": "Если звук не играет, ошибка, скорее всего, до этого блока. Если играет — после него.",
+  "gui.debugModal.addSoundCheckpoints.description3": "Убери звуки, когда код заработает.",
+
+  "gui.debugModal.tinkerWithBlockOrder.title": "Поэкспериментируй с порядком блоков",
+  "gui.debugModal.tinkerWithBlockOrder.description1": "Попробуй изменить порядок и последовательность блоков.",
+  "gui.debugModal.tinkerWithBlockOrder.description2": "Что должно произойти первым?",
+  "gui.debugModal.tinkerWithBlockOrder.description3": "А что вторым?",
+  "gui.debugModal.tinkerWithBlockOrder.description4": "Нужно ли сбрасывать значения или спрайты перед выполнением следующей части кода?",
+  "gui.debugModal.tinkerWithBlockOrder.description5": "Попробуй блоки внутри цикла или условия и сравни с тем же кодом без цикла и условия.",
+
+  "gui.debugModal.toLoopOrNot.title": "Цикл или не цикл",
+  "gui.debugModal.timingAndParallelism.title": "Подумай о времени и параллельности",
+  "gui.debugModal.timingAndParallelism.sectionTitle": "Время и параллельность",
+  "gui.debugModal.timingAndParallelism.description1": "Не запускается ли несколько событий одновременно? Если две последовательности начинаются в один момент, поведение может быть непредсказуемым.",
+  "gui.debugModal.timingAndParallelism.description2": "Добавь небольшие задержки, сообщения или действие пользователя (щелчок, нажатие клавиши) и проверь, изменился ли результат.",
+
+  "gui.debugModal.thinkAboutBlockOptions.title": "Подумай о других блоках",
+  "gui.debugModal.thinkAboutBlockOptions.description1": "Нет ли похожего, но другого блока, который подойдёт лучше?",
+  "gui.debugModal.thinkAboutBlockOptions.description2": "Некоторые блоки выглядят похоже, но работают по-разному: например, «установить» и «изменить» или «играть до конца» и «начать».",
+  "gui.debugModal.thinkAboutBlockOptions.description3": "Попробуй заменить блок на похожий и посмотри, изменится ли результат.",
+
+  "gui.debugModal.checkTheValues.title": "Проверь значения",
+  "gui.debugModal.checkTheValues.description1": "Если ты используешь переменные или блоки-датчики, проверь значение в момент выполнения этой части кода.",
+  "gui.debugModal.checkTheValues.description2": "Все спрайты должны менять переменную или только один?",
+  "gui.debugModal.checkTheValues.description3": "Где значение сбрасывается? Где оно меняется?",
+
+  "gui.debugModal.checkCodeSequence.title": "Проверь последовательность кода",
+  "gui.debugModal.checkCodeSequence.description1": "Убедись, что код прикреплён к нужному спрайту или к сцене.",
+  "gui.debugModal.checkCodeSequence.description2": "Если код нужно перенести на другой спрайт, перетащи его мышью и отпусти, когда нужный спрайт выделится.",
+  "gui.debugModal.checkCodeSequence.description3": "Ещё можно хранить и переносить код и изображения в рюкзаке (внизу экрана).",
+
+  "gui.debugModal.commentYourCode.title": "Комментируй код",
+  "gui.debugModal.commentYourCode.description1": "Комментарии помогают другим понять твой код, а тебе — вспомнить, как он работает, когда ты вернёшься к нему позже.",
+  "gui.debugModal.commentYourCode.description2": "Щёлкни правой кнопкой по области скриптов и выбери «Добавить комментарий». Обычными словами опиши, что делает блок или небольшая группа блоков.",
+
+  "gui.debugModal.takeABreak.title": "Сделай перерыв",
+  "gui.debugModal.takeABreak.description1": "Иногда слишком долгая работа над одной проблемой только мешает и расстраивает.",
+  "gui.debugModal.takeABreak.description2": "Отойди от экрана и дай голове отдохнуть. После отдыха или другого занятия задача часто решается легче.",
+
+  "gui.debugModal.askForHelp.title": "Попроси о помощи",
+  "gui.debugModal.askForHelp.description1": "Если ничего не получается, попроси помощи у товарища: покажи проект и опиши в комментарии или в описании, что не работает.",
+  "gui.debugModal.askForHelp.description2": "Попроси одного-трёх человек попробовать твой код: у разных людей бывают разные взгляды и решения."
+}

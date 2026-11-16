@@ -99,6 +99,10 @@ $config = [
         'hardwareinstall' => get_string('hardwareinstalllink', 'mod_scratch'),
         'hardwareclose' => get_string('hardwareclose', 'mod_scratch'),
         'hardwarenoedit' => get_string('hardwarenoedit', 'mod_scratch'),
+        'continuetitle' => get_string('continuetitle', 'mod_scratch'),
+        'continueyes' => get_string('continueyes', 'mod_scratch'),
+        'continuefresh' => get_string('continuefresh', 'mod_scratch'),
+        'newproject' => get_string('newproject', 'mod_scratch'),
     ],
 ];
 
@@ -126,6 +130,17 @@ header('X-Frame-Options: SAMEORIGIN');
   <?php endif; ?>
   <button id="download-btn" class="btn btn-secondary" type="button"><?php echo $config['strings']['download']; ?></button>
 </header>
+<?php if ($config['fileUrl'] && $canedit) : ?>
+<div id="continue-panel" class="continue-panel" role="dialog" aria-modal="true" aria-labelledby="continue-panel-title" hidden>
+  <div class="continue-panel__box">
+    <h2 id="continue-panel-title"><?php echo s($config['strings']['continuetitle']); ?></h2>
+    <p class="continue-panel__actions">
+      <button id="continue-btn" class="btn btn-primary" type="button"><?php echo s($config['strings']['continueyes']); ?></button>
+      <button id="continue-fresh" class="btn btn-secondary" type="button"><?php echo s($config['strings']['continuefresh']); ?></button>
+    </p>
+  </div>
+</div>
+<?php endif; ?>
 <div id="hardware-panel" class="hardware-panel" role="dialog" aria-modal="true" aria-labelledby="hardware-panel-title" hidden>
   <div class="hardware-panel__box">
     <h2 id="hardware-panel-title"><?php echo s($config['strings']['hardwaretitle']); ?></h2>

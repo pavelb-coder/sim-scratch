@@ -114,6 +114,71 @@
     return socket;
   }
 
+  /**
+   * Stop the Settings menu from blinking.
+   *
+   * When a dropdown opens, the GUI calls scrollIntoView({block: 'center'}) on the menu item of
+   * the current language. Inside its own layout that scrolls the menu, but here the scrollable
+   * ancestor is the editor page (#app), so the whole editor jumps a few dozen pixels. The menu
+   * slides out from under the pointer, closes, and the pointer then reopens it — the menu
+   * flickers while it is being used.
+   *
+   * Scrolling is therefore limited to elements that are genuine, height constrained scroll
+   * containers. The menu inside the editor page no longer moves, the page stays put, and the
+   * language list still scrolls to the selected language where the GUI does give it its own
+   * scroll area.
+   */
+  function stabiliseMenuScrolling() {
+    var native = Element.prototype.scrollIntoView;
+    if (!native || native.__scratchMoodlePatched) return;
+
+    // The menu lists carry their own scroll area, so nothing needs to move the editor page.
+    function wouldScrollEditorPage(el) {
+      var page = document.getElementById('app');
+      var node = el.parentElement;
+      while (node && node !== document.body && node !== document.documentElement) {
+        if (node === page) {
+          var style = window.getComputedStyle(node);
+          var scrollable = style.overflowY === 'auto' || style.overflowY === 'scroll';
+          return scrollable && node.scrollHeight > node.clientHeight + 4;
+        }
+        node = node.parentElement;
+      }
+      return false;
+    }
+
+    function patchedScrollIntoView() {
+      if (wouldScrollEditorPage(this)) return undefined;
+      return native.apply(this, arguments);
+    }
+    patchedScrollIntoView.__scratchMoodlePatched = true;
+    Element.prototype.scrollIntoView = patchedScrollIntoView;
+  }
+
+  /**
+   * Provide Russian text for GUI messages that ship untranslated.
+   *
+   * The editor falls back to the English `defaultMessage` for these ids, which is why parts of
+   * the debug window stayed in English. The GUI resolves a locale's catalogue lazily and caches
+   * the result, so the messages have to be captured the first time the catalogue is built. A
+   * proxy is installed over `messagesByLocale` before the editor boots: it records every
+   * catalogue the GUI creates, and the Russian strings are injected into them.
+   *
+   * Only the current locale is touched; English stays English.
+   */
+  /**
+   * Hide the tutorial library button.
+   *
+   * The menu bar renders the "Tutorials" entry unconditionally — it is wired straight into the
+   * component tree, with no prop to disable it — so the only way to remove it in this deployment
+   * is to hide it. Tutorials from scratch.mit.edu are not part of a course activity anyway.
+   */
+  function hideTutorialsButton() {
+    var style = document.createElement('style');
+    style.textContent = '[class*="tutorials-button"]{display:none !important}';
+    (document.head || document.documentElement).appendChild(style);
+  }
+
   /** Show the "how to connect LEGO" panel. */
   function openHardwareHelp() {
     var panel = document.getElementById('hardware-panel');
@@ -311,6 +376,58 @@
       .then(function () { restoring = false; ready = true; });
   }
 
+
+
+  /**
+   * Offer "continue saved project" once the editor markup is in the document.
+   *
+   * PROJECT_LOADED can fire before React has mounted the surrounding page elements, so the
+   * panel is looked up on a few short retries instead of assuming it is already there.
+   */
+  function offerContinueWhenReady(attempt) {
+    if (document.getElementById('continue-panel')) {
+      offerContinue();
+      return;
+    }
+    if (attempt > 40) { loadExistingProject(); return; }
+    setTimeout(function () { offerContinueWhenReady(attempt + 1); }, 100);
+  }
+
+  /** Status line text for the current submission state. */
+  function statusText() {
+    if (CFG.status === 'submitted') return S.submitted || 'Submitted';
+    if (CFG.status === 'draft') return S.draft || 'Draft';
+    return S.newproject || 'New project';
+  }
+
+  /**
+   * Ask the student whether to continue the saved project.
+   *
+   * The editor starts on an empty project. When a saved .sb3 exists, a small panel offers to
+   * load it; choosing "start fresh" leaves the blank project untouched. The saved file stays in
+   * Moodle either way — nothing is deleted until the student saves again.
+   */
+  function offerContinue() {
+    var panel = document.getElementById('continue-panel');
+    if (!panel) { loadExistingProject(); return; }
+    panel.hidden = false;
+    var resume = document.getElementById('continue-btn');
+    var fresh = document.getElementById('continue-fresh');
+    if (resume) {
+      resume.addEventListener('click', function () {
+        panel.hidden = true;
+        loadExistingProject();
+      });
+    }
+    if (fresh) {
+      fresh.addEventListener('click', function () {
+        panel.hidden = true;
+        setStatus(S.newproject || 'New project');
+      });
+    }
+    setStatus(statusText());
+  }
+
   function boot() {
     var G = window.GUI;
     if (!G || !window.React || !window.ReactDOM) {
@@ -326,6 +443,8 @@
       return;
     }
     applyLocale();
+    hideTutorialsButton();
+    stabiliseMenuScrolling();
     installStaticShims();
     blockCloudRelay();
     installHardwareHelp();
@@ -357,12 +476,24 @@
         vm = v;
         window.__scratchMoodle = { vm: v, save: function () { return saveToMoodle('save'); } };
         v.on('PROJECT_CHANGED', scheduleSave);
-        v.on('PROJECT_LOADED', function () {
-          if (!restoring && !ready) {
-            ready = true;
-            loadExistingProject();
-          }
-        });
+        // The editor opens on an empty project. A saved project is loaded only when the student
+        // asks for it (see the "Continue" button), so nobody overwrites earlier work by accident
+        // and a fresh activity does not look empty-handed.
+        // The VM may already have loaded its default project before this callback runs, in which
+        // case PROJECT_LOADED never reaches us; the target list is then already populated.
+        var onReady = function () {
+          if (restoring || ready) return;
+          ready = true;
+          if (CFG.fileUrl && CFG.canEdit) offerContinueWhenReady(0);
+          else setStatus(statusText());
+        };
+        v.on('PROJECT_LOADED', onReady);
+        var poll = 0;
+        (function waitForTargets() {
+          if (ready || poll++ > 100) return;
+          if (v.runtime && v.runtime.targets && v.runtime.targets.length > 0) onReady();
+          else setTimeout(waitForTargets, 100);
+        })();
       }
     };
 

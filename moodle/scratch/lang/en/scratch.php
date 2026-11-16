@@ -99,3 +99,7 @@ $string['hardwareinstalllink'] = 'Download Scratch Link';
 $string['hardwareclose'] = 'Close';
 $string['hardwarenoedit'] = 'Hardware blocks need a project you can edit. Open the activity to work with LEGO.';
 $string['privacy:metadata:external:scratchlink'] = 'The Scratch editor can connect to a Scratch Link application installed on the user computer in order to control LEGO WeDo 2.0 and LEGO MINDSTORMS EV3 hardware. The connection is made directly from the browser to the local computer (WebSocket on 127.0.0.1); no device data is sent to the Moodle server or to any third party.';
+$string['continuetitle'] = 'You have a saved project. Continue working on it?';
+$string['continueyes'] = 'Continue my project';
+$string['continuefresh'] = 'Start a new project';
+$string['newproject'] = 'New project';

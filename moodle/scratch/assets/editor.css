@@ -96,3 +96,50 @@ body {
   gap: 12px;
   flex-wrap: wrap;
 }
+
+/* --- Settings menu height ----------------------------------------------------------------
+   The GUI gives the language list a fixed max-height that assumes the editor fills the whole
+   window. Here the editor starts below the Moodle toolbar, so the list can be taller than the
+   space left under the menu bar; the GUI then scrolls the whole editor page to compensate,
+   which makes the menu jump out from under the pointer. Limiting the list to the space that is
+   really available lets its own scrollbar do the work and keeps the page still. */
+[class*="menu-bar-menu"] div[class*="submenu"] ul[class*="menu_menu_"] {
+  max-height: calc(100vh - 170px);
+  overflow-y: auto;
+}
+
+/* --- "Continue saved project?" panel ----------------------------------------------------- */
+.continue-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 24px;
+}
+.continue-panel[hidden] {
+  display: none;
+}
+.continue-panel__box {
+  background: #fff;
+  color: #1f2933;
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  max-width: 460px;
+  width: 100%;
+  padding: 22px 24px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.continue-panel__box h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+.continue-panel__actions {
+  margin: 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}

@@ -59,24 +59,19 @@ if (patched) {
   console.warn('publicPath needle not found');
 }
 
-// LEGO hardware: keep the Scratch Link connection local.
-//
-// scratch-vm opens a local socket (ws://127.0.0.1:20111/<channel>) and, in parallel, a relay
-// socket to the hosted Scratch service (wss://device-manager.scratch.mit.edu:20110/<channel>);
-// whichever answers first wins. Schools should not depend on, or leak device data to, the
-// hosted relay, so the relay URL is pointed at the local Scratch Link port as well. Both sockets
-// then reach the same local daemon and the editor works without any third-party service.
-// Setting window.SCRATCH_MOODLE.hardware.allowCloudRelay = true in editor.php restores the
-// original behaviour; the runtime guard in assets/editor.js enforces the same rule.
-const relayNeedle = 'wss://device-manager.scratch.mit.edu:20110/';
-const relayReplacement = 'ws://127.0.0.1:20111/';
-if (gui.includes(relayNeedle)) {
-  const count = gui.split(relayNeedle).length - 1;
-  gui = gui.split(relayNeedle).join(relayReplacement);
+// Bundle patches shared with the GitHub Pages build (scripts/scratch-bundle-patches.js):
+// the hosted Scratch Link relay is pointed at the local port and the Russian translation pack
+// is applied to the ru locale, so the debug window and the menu match the rest of the UI.
+const patches = require('./scratch-bundle-patches');
+{
+  const relay = patches.applyRelayPatch(gui);
+  gui = relay.code;
+  console.log('patched hosted Scratch Link relay -> local: ' + relay.count);
+  const ru = patches.applyShippedTranslations(gui);
+  gui = ru.code;
+  console.log('applied Russian UI translations: ' + ru.replaced +
+    (ru.missing.length ? ' (missing: ' + ru.missing.join(', ') + ')' : ''));
   fs.writeFileSync(guiPath, gui);
-  console.log('patched hosted Scratch Link relay -> local (' + count + ')');
-} else {
-  console.warn('hosted relay needle not found');
 }
 
 // scratch-vm creates extension workers from ./extension-worker.js relative to editor.php.

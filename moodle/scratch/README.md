@@ -34,6 +34,17 @@ The Scratch editor is bundled inside the plugin; it does not depend on GitHub Pa
 2. Visit **Site administration → Notifications** to complete installation.
 3. Add a **Scratch project** activity to a course.
 
+## Editor behaviour
+
+- The editor opens on a blank project. If the student already has a saved `.sb3`, a small panel
+  asks whether to continue it or start fresh; nothing is loaded or overwritten silently.
+- The Scratch tutorial library button is hidden — course activities do not use it.
+- The GUI texts that ship untranslated (the debug window) are translated by
+  `scripts/scratch-locale-ru.json`, applied to the bundle when the plugin is built. Add a key
+  there to translate another message.
+- The language list in **Settings → Language** is capped to the available height, so the menu no
+  longer pulls the editor page up and down while it is open.
+
 ## Permissions
 
 - `mod/scratch:addinstance` — add activity (editing teacher, manager).
