@@ -47,26 +47,19 @@ const extensionWorker = path.join(SRC, 'vendor', 'scratch-gui', 'dist', 'extensi
 if (fs.existsSync(extensionWorker)) {
   fs.copyFileSync(extensionWorker, path.join(OUT, 'extension-worker.js'));
 }
-// Keep LEGO hardware traffic local.
-//
-// scratch-vm opens the Scratch Link socket on ws://127.0.0.1:20111 and, in parallel, a relay
-// socket to the hosted Scratch service. Whichever answers first wins, which means hardware
-// support would silently depend on a third-party server. Pointing the relay URL at the local
-// port as well keeps the editor working with a locally installed Scratch Link alone and stops
-// device data from leaving the computer. Must run before the publicPath patch below, which
-// replaces the whole file when it matches.
-const relayNeedle = 'wss://device-manager.scratch.mit.edu:20110/';
-const relayReplacement = 'ws://127.0.0.1:20111/';
+// Keep LEGO hardware traffic local and translate the strings the GUI ships untranslated.
+// Shared with the Moodle plugin build, see scripts/scratch-bundle-patches.js.
+const patches = require('./scratch-bundle-patches');
 if (fs.existsSync(guiPath)) {
   let gui = fs.readFileSync(guiPath, 'utf8');
-  if (gui.includes(relayNeedle)) {
-    const count = gui.split(relayNeedle).length - 1;
-    gui = gui.split(relayNeedle).join(relayReplacement);
-    fs.writeFileSync(guiPath, gui);
-    console.log('patched hosted Scratch Link relay -> local: ' + count);
-  } else {
-    console.warn('hosted Scratch Link relay needle not found');
-  }
+  const relay = patches.applyRelayPatch(gui);
+  gui = relay.code;
+  console.log('patched hosted Scratch Link relay -> local: ' + relay.count);
+  const ru = patches.applyShippedTranslations(gui);
+  gui = ru.code;
+  console.log('applied Russian UI translations: ' + ru.replaced +
+    (ru.missing.length ? ' (missing: ' + ru.missing.join(', ') + ')' : ''));
+  fs.writeFileSync(guiPath, gui);
 }
 // Scratch GUI should also follow the language of the surrounding site.
 const indexHtml = path.join(OUT, 'index.html');
