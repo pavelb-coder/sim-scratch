@@ -66,6 +66,17 @@ npm run sync:moodle -- --dry-run # проверить без push
 npm run sync:moodle -- --force-build  # принудительно пересобрать ассеты
 ```
 
+### Оборудование LEGO (Scratch Link)
+
+Встроенный редактор поддерживает LEGO WeDo 2.0 и LEGO MINDSTORMS EV3 через программу
+[Scratch Link](https://scratch.mit.edu/download/scratch-link), установленную на компьютере
+ученика.
+
+`scripts/build-pages.js` и `scripts/build-moodle-plugin.js` при сборке заменяют адрес облачного
+резерва Scratch (`wss://device-manager.scratch.mit.edu:20110/`) на локальный порт
+`ws://127.0.0.1:20111/`. Поэтому и сайт на GitHub Pages, и плагин Moodle работают только с
+локальным Scratch Link: данные об устройствах не покидают компьютер.
+
 Отключить локальную автосинхронизацию ветки можно в `sync.local.json`:
 
 ```json
