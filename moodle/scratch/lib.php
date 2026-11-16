@@ -299,3 +299,51 @@ function scratch_user_complete($user, $course, $cm, $scratch) {
         echo get_string('grade') . ': ' . $submission->grade;
     }
 }
+
+/**
+ * Map the current Moodle language onto a language code the bundled Scratch editor knows.
+ *
+ * The Scratch GUI ships its own translations (the LEGO WeDo 2.0 and EV3 block labels and all
+ * connection dialogs included). It can only use them when it is told which locale to load,
+ * otherwise it falls back to English. Moodle language packs and Scratch locales do not share
+ * an identifier format (Moodle uses "ru", "pt_br", "zh_cn"; Scratch uses "ru", "pt-br", "zh-cn"),
+ * so the code has to be translated here.
+ *
+ * Only locales that the bundle actually contains are returned; anything unknown falls back to
+ * English, which is what the editor itself would do.
+ *
+ * @param string|null $language Moodle language code, defaults to the current language.
+ * @return string Locale code understood by the Scratch editor.
+ */
+function scratch_editor_locale(?string $language = null): string {
+    if ($language === null) {
+        $language = current_language();
+    }
+    $language = strtolower(trim((string)$language));
+    if ($language === '') {
+        return 'en';
+    }
+    // "pt_br", "zh_cn", "en_us" -> "pt-br", "zh-cn", "en-us".
+    $language = str_replace('_', '-', $language);
+
+    // Locales shipped with the bundled Scratch GUI (taken from the bundle itself), as a lookup set.
+    static $supported = null;
+    if ($supported === null) {
+        $supported = array_flip([
+            'ab', 'af', 'am', 'an', 'ar', 'ast', 'az', 'be', 'bg', 'bn', 'ca', 'ckb',
+            'cs', 'cy', 'da', 'de', 'el', 'en', 'eo', 'es', 'et', 'eu', 'fa', 'fi',
+            'fil', 'fr', 'fy', 'ga', 'gd', 'gl', 'ha', 'he', 'hi', 'hr', 'ht', 'hu',
+            'hy', 'id', 'is', 'it', 'ja', 'ja-hira', 'ka', 'kk', 'km', 'ko', 'ku', 'lt',
+            'lv', 'mi', 'mn', 'nb', 'nl', 'nn', 'nso', 'oc', 'or', 'pl', 'pt', 'pt-br',
+            'qu', 'rap', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv', 'sw', 'th', 'tn', 'tr',
+            'uk', 'uz', 'vi', 'xh', 'zh-cn', 'zh-tw', 'zu',
+        ]);
+    }
+
+    if (isset($supported[$language])) {
+        return $language;
+    }
+    // Regional variants the GUI does not ship (e.g. "de-at", "es-mx") use the base language.
+    $base = explode('-', $language)[0];
+    return isset($supported[$base]) ? $base : 'en';
+}

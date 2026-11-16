@@ -67,6 +67,15 @@ $config = [
     'activityName' => format_string($scratch->name),
     'basePath' => $assetsbase . 'vendor/scratch-gui/dist/',
     'assetHost' => 'https://assets.scratch.mit.edu',
+    // Language of the bundled editor UI and its extension blocks (LEGO WeDo 2.0 / EV3 included).
+    'locale' => scratch_editor_locale(),
+    // Hardware support: the editor talks to a locally installed Scratch Link (WebSocket on
+    // 127.0.0.1:20111). The hosted Scratch relay is disabled, so no device data leaves the computer.
+    'hardware' => [
+        'linkUrl' => 'https://scratch.mit.edu/download/scratch-link',
+        'installUrl' => 'https://scratch.mit.edu/download/scratch-link',
+        'allowCloudRelay' => false,
+    ],
     'strings' => [
         'loading' => get_string('loading', 'mod_scratch'),
         'saving' => get_string('saving', 'mod_scratch'),
@@ -80,6 +89,16 @@ $config = [
         'readonly' => get_string('readonlyproject', 'mod_scratch'),
         'toolarge' => get_string('errorfiletoolarge', 'mod_scratch'),
         'confirmSubmit' => get_string('confirmsubmit', 'mod_scratch'),
+        'hardware' => get_string('hardwarehelp', 'mod_scratch'),
+        'hardwaretitle' => get_string('hardwaretitle', 'mod_scratch'),
+        'hardwaresteps' => [
+            get_string('hardwarestep1', 'mod_scratch'),
+            get_string('hardwarestep2', 'mod_scratch'),
+            get_string('hardwarestep3', 'mod_scratch'),
+        ],
+        'hardwareinstall' => get_string('hardwareinstalllink', 'mod_scratch'),
+        'hardwareclose' => get_string('hardwareclose', 'mod_scratch'),
+        'hardwarenoedit' => get_string('hardwarenoedit', 'mod_scratch'),
     ],
 ];
 
@@ -100,12 +119,28 @@ header('X-Frame-Options: SAMEORIGIN');
   <span class="activity-name"><?php echo format_string($scratch->name); ?></span>
   <span class="spacer"></span>
   <span id="save-status" class="save-status"><?php echo $config['strings']['loading']; ?></span>
+  <button id="hardware-btn" class="btn btn-secondary" type="button" title="<?php echo s($config['strings']['hardwaretitle']); ?>">LEGO</button>
   <?php if ($canedit) : ?>
   <button id="save-btn" class="btn btn-secondary" type="button"><?php echo get_string('savedraft', 'mod_scratch'); ?></button>
   <button id="submit-btn" class="btn btn-primary" type="button"><?php echo $config['strings']['submit']; ?></button>
   <?php endif; ?>
   <button id="download-btn" class="btn btn-secondary" type="button"><?php echo $config['strings']['download']; ?></button>
 </header>
+<div id="hardware-panel" class="hardware-panel" role="dialog" aria-modal="true" aria-labelledby="hardware-panel-title" hidden>
+  <div class="hardware-panel__box">
+    <h2 id="hardware-panel-title"><?php echo s($config['strings']['hardwaretitle']); ?></h2>
+    <ol class="hardware-panel__steps">
+      <?php foreach ($config['strings']['hardwaresteps'] as $step) : ?>
+      <li><?php echo s($step); ?></li>
+      <?php endforeach; ?>
+    </ol>
+    <p class="hardware-panel__note"><?php echo s($config['strings']['hardware']); ?></p>
+    <p class="hardware-panel__actions">
+      <a class="btn btn-primary" href="<?php echo s($config['hardware']['installUrl']); ?>" target="_blank" rel="noopener noreferrer"><?php echo s($config['strings']['hardwareinstall']); ?></a>
+      <button id="hardware-close" class="btn btn-secondary" type="button"><?php echo s($config['strings']['hardwareclose']); ?></button>
+    </p>
+  </div>
+</div>
 <main id="app" class="app" translate="no">
   <div class="loading-screen"><p><?php echo $config['strings']['loading']; ?></p></div>
 </main>

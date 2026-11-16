@@ -51,6 +51,122 @@
     input.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  /* ---------------------------------------------------------------------------------------
+   * Hardware support (LEGO WeDo 2.0 / LEGO MINDSTORMS EV3).
+   *
+   * The bundled Scratch GUI already contains both extensions and the Scratch Link client.
+   * Scratch Link is a program installed on the user computer that listens on
+   * ws://127.0.0.1:20111 and talks to the LEGO hub over Bluetooth. The GUI normally also opens
+   * a fallback connection to the hosted Scratch relay at wss://device-manager.scratch.mit.edu
+   * and uses whichever answers first. We only want the local connection, so device data never
+   * leaves the computer: the relay socket is turned into an inert object that never connects.
+   * ------------------------------------------------------------------------------------ */
+  var CLOUD_RELAY_PATTERN = /^wss?:\/\/device-manager\.scratch\.mit\.edu(:\d+)?\//i;
+
+  function blockCloudRelay() {
+    var HW = CFG.hardware || {};
+    if (HW.allowCloudRelay) return;
+    var NativeWebSocket = window.WebSocket;
+    if (!NativeWebSocket || NativeWebSocket.__scratchMoodlePatched) return;
+
+    function LocalOnlyWebSocket(url, protocols) {
+      if (CLOUD_RELAY_PATTERN.test(String(url))) {
+        return createInertSocket(url);
+      }
+      return protocols === undefined ? new NativeWebSocket(url) : new NativeWebSocket(url, protocols);
+    }
+    // Keep the constructor contract of the native object (static constants, prototype).
+    LocalOnlyWebSocket.prototype = NativeWebSocket.prototype;
+    LocalOnlyWebSocket.CONNECTING = NativeWebSocket.CONNECTING;
+    LocalOnlyWebSocket.OPEN = NativeWebSocket.OPEN;
+    LocalOnlyWebSocket.CLOSING = NativeWebSocket.CLOSING;
+    LocalOnlyWebSocket.CLOSED = NativeWebSocket.CLOSED;
+    LocalOnlyWebSocket.__scratchMoodlePatched = true;
+    Object.defineProperty(LocalOnlyWebSocket, 'name', { value: 'WebSocket' });
+    window.WebSocket = LocalOnlyWebSocket;
+  }
+
+  /**
+   * A WebSocket stand-in that never connects and never fires events.
+   *
+   * The GUI races the local and the relay socket and closes the loser. A relay socket that
+   * merely failed would be reported as an error, so this one stays silent forever and simply
+   * loses the race to the local Scratch Link connection.
+   */
+  function createInertSocket(url) {
+    var socket = {
+      url: String(url),
+      readyState: 0, // CONNECTING
+      binaryType: 'blob',
+      bufferedAmount: 0,
+      extensions: '',
+      protocol: '',
+      onopen: null,
+      onclose: null,
+      onerror: null,
+      onmessage: null,
+      send: function () {},
+      close: function () { socket.readyState = 3; },
+      addEventListener: function () {},
+      removeEventListener: function () {},
+      dispatchEvent: function () { return true; }
+    };
+    return socket;
+  }
+
+  /** Show the "how to connect LEGO" panel. */
+  function openHardwareHelp() {
+    var panel = document.getElementById('hardware-panel');
+    if (panel) panel.hidden = false;
+  }
+
+  function closeHardwareHelp() {
+    var panel = document.getElementById('hardware-panel');
+    if (panel) panel.hidden = true;
+  }
+
+  function installHardwareHelp() {
+    if (CFG.canEdit === false) {
+      // Read-only previews never talk to hardware; the button would only add confusion.
+      var button = document.getElementById('hardware-btn');
+      if (button) button.hidden = true;
+      return;
+    }
+    var btn = document.getElementById('hardware-btn');
+    var close = document.getElementById('hardware-close');
+    var panel = document.getElementById('hardware-panel');
+    if (btn) btn.addEventListener('click', openHardwareHelp);
+    if (close) close.addEventListener('click', closeHardwareHelp);
+    if (panel) {
+      panel.addEventListener('click', function (event) {
+        if (event.target === panel) closeHardwareHelp();
+      });
+    }
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') closeHardwareHelp();
+    });
+  }
+
+  /**
+   * Tell the Scratch GUI which language to use.
+   *
+   * The GUI resolves its locale from ?locale= / ?lang= in the page URL and only then from the
+   * browser, and it does so when the React tree is created. Moodle already knows the right
+   * language (current_language()), so that value is put into the URL before the editor boots.
+   * Without this the editor would follow the browser language and could ignore the course
+   * language chosen in Moodle.
+   */
+  function applyLocale() {
+    var locale = CFG.locale;
+    if (!locale || typeof window.history === 'undefined' || !window.history.replaceState) return;
+    try {
+      var url = new URL(window.location.href);
+      if (url.searchParams.has('locale') || url.searchParams.has('lang')) return;
+      url.searchParams.set('locale', locale);
+      window.history.replaceState(window.history.state, '', url.href);
+    } catch (e) { /* not critical: the GUI falls back to the browser language */ }
+  }
+
   function installStaticShims() {
     function jsonResponse(obj) {
       return new Response(JSON.stringify(obj), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -209,12 +325,17 @@
       appTarget.innerHTML = '<div class="loading-screen"><p>Scratch GUI is missing AppStateHOC.</p></div>';
       return;
     }
+    applyLocale();
     installStaticShims();
+    blockCloudRelay();
+    installHardwareHelp();
     if (setAppElement) setAppElement(appTarget);
     var Wrapped = AppStateHOC(GUIComponent);
 
     var props = {
       projectId: '0',
+      // The GUI picks its language from ?locale=/?lang= in the URL or from the browser, not from
+      // props, so editor.php puts the Moodle language into the URL (see localeQuery()).
       canEditTitle: !!CFG.canEdit,
       canManageFiles: !!CFG.canEdit,
       canCreateNew: false,

@@ -8,6 +8,11 @@ The Scratch editor is bundled inside the plugin; it does not depend on GitHub Pa
 
 - Activity type: **Scratch project** (`mod_scratch`).
 - Bundled Scratch GUI 5.3.0 editor (Russian/English UI, themes).
+- **LEGO hardware support**: LEGO Education WeDo 2.0 and LEGO MINDSTORMS EV3 work through
+  [Scratch Link](https://scratch.mit.edu/download/scratch-link) installed on the student computer.
+  The connection is local (`ws://127.0.0.1:20111`); the hosted Scratch relay is disabled, so no
+  device data is sent anywhere.
+- The editor follows the Moodle language, including the LEGO blocks and connection dialogs.
 - Student workflow: open editor → autosave draft → submit project.
 - Teacher workflow: view submissions, preview projects read-only, download `.sb3`, grade and give feedback.
 - Moodle gradebook integration.
@@ -55,3 +60,21 @@ node scripts/build-moodle-plugin.js
 
 This copies the vendored Scratch GUI/React assets from `public/vendor/` into
 `moodle/scratch/assets/vendor/` and patches the webpack public path for Moodle.
+
+It also rewrites the hosted Scratch Link relay URL
+(`wss://device-manager.scratch.mit.edu:20110/`) to the local port, so the editor only ever talks
+to Scratch Link on the student computer. `assets/editor.js` enforces the same rule at runtime by
+turning relay sockets into inert objects; set `hardware.allowCloudRelay` to `true` in
+`editor.php` (together with an unpatched bundle) if the hosted relay is ever wanted again.
+
+## LEGO hardware (WeDo 2.0 / EV3)
+
+1. Install and start [Scratch Link](https://scratch.mit.edu/download/scratch-link) on the
+   student computer (Windows 10 1709+ or macOS 10.15+, Bluetooth required).
+2. In the editor press **LEGO** in the top bar for the short instructions.
+3. Open **Add extension** and pick *LEGO Education WeDo 2.0* or *LEGO MINDSTORMS EV3*,
+   then **Start searching**. EV3 additionally needs the connection PIN `1234`.
+
+The editor talks to Scratch Link over `ws://127.0.0.1:20111` directly from the browser; this
+works from both HTTP and HTTPS pages. Chrome and Edge ask for local network permission the first
+time — students need to allow it. Only one Scratch tab can use Scratch Link at a time.
